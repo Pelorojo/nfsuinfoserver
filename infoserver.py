@@ -92,8 +92,10 @@ def handle_perf_request(parameter_track):
 
             name = block[:block.find(b'\0')].decode('utf-8')
             values = struct.unpack('iii', block[16:])
-            entry = [name] + list(values)
-            data_array.append(entry)
+            
+            if (values[0] > 0): # Skip empty scores/times
+                entry = [name] + list(values)
+                data_array.append(entry)
 
     if track_type == 13: # drift
         data_array.sort(key=lambda x: x[1], reverse=True)
