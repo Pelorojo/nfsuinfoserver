@@ -5,6 +5,9 @@ import os
 import struct
 import signal
 import asyncio
+import sys
+
+import holepunch
 
 nfsuserver_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -180,7 +183,15 @@ async def main():
     try:
         # Start pinging the central registry in the background
         ping_task = asyncio.create_task(ping_central_registry(host, port))
-        
+
+        # Hole punching rendezvous/relay (UDP 10910) for the NFSUServerChanger plugin;
+        # off with --no-holepunch. The info server keeps running if it can't start.
+        if '--no-holepunch' not in sys.argv:
+            try:
+                await holepunch.start(host)
+            except Exception as e:
+                print(f"Hole punching not started: {e}")
+
         server = await asyncio.start_server(handle_client, host, port)
         print(f"TCP server is listening on {host}:{port}")  
             

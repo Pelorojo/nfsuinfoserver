@@ -35,6 +35,32 @@ _`<trackid>` can be: `1001`, `1002`, `1003`, `1004`, `1005`, `1006`, `1007`, `10
 => out\
 `<name1>|<result1>|<carid1>|<reverse1>~<name2>|<result2>|<cardid2>|<reverse2>` ...
 
+# Hole punching (UDP 10910)
+The info server also runs the rendezvous and relay service for the hole punching of the [NFSUServerChanger](https://github.com/Pelorojo/NFSUServerChanger) game plugin
+(`holepunch.py`, started automatically). It lets players race each other even when the host
+can't open UDP port 3658 (mobile/CGNAT, no port forwarding): the plugin learns the players'
+real public ports here, and if a direct connection still fails, the race is relayed through
+this server. Players without the plugin are not affected.
+
+The plugin finds the service at the IP of your lobby server, so run the info server on the same
+machine and open UDP port 10910 in your firewall, e.g. `sudo ufw allow 10910/udp`.\
+To run the info server without it, add `--no-holepunch` to the `ExecStart` line of the service.
+
+Protocol (plain text unless noted, port 10910):
+
+<= in, from the game's UDP socket (no answer)\
+`NHP1 HELLO <persona>`
+
+<= in\
+`NHP1 QUERY <ip> <persona>`\
+=> out\
+`NHP1 FOUND <ip> <port> <persona>` / `NHP1 OTHER <ip> <persona>` (plugin present, but its UDP
+comes from another IP: relay only) / `NHP1 NONE <ip> <persona>`
+
+<= in, from the game's UDP socket (binary)\
+`NHPR` + 4-byte pair token + game packet\
+=> forwarded unchanged to the other player of the pair
+
 # nfsuinfocentral
 You don't need to install the infocentral script as my server `nfs.onl` currently acts as public list provider. You can receive the the server ip list for your own website by sending the following request:
 
