@@ -9,7 +9,7 @@ import sys
 
 import holepunch
 
-VERSION = '1.1.1'
+VERSION = '1.1.2'
 
 # Under systemd stdout is a pipe and Python would buffer it: flush every line, so the
 # journal shows each message when it happens.
