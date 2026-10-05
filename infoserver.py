@@ -9,7 +9,11 @@ import sys
 
 import holepunch
 
-VERSION = '1.1.0'
+VERSION = '1.1.1'
+
+# Under systemd stdout is a pipe and Python would buffer it: flush every line, so the
+# journal shows each message when it happens.
+sys.stdout.reconfigure(line_buffering=True)
 
 nfsuserver_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -162,22 +166,32 @@ def handle_rank_request(parameter_type):
     return csv_data
 
 async def handle_client(reader, writer):
-    data = await reader.read(1024)
-    request = data.decode().strip()
     addr = writer.get_extra_info('peername')
-    print(f"Received request from {addr}: {request}")
+    try:
+        data = await reader.read(1024)
+        # Port scanners send binary or HTTP; undecodable bytes just make an unknown request.
+        request = data.decode(errors='replace').strip()
+        # repr: one line per request in the log, even for multi-line or binary data
+        print(f"Received request from {addr}: {request!r}")
 
-    response = handle_request(request)
+        try:
+            response = handle_request(request)
+        except Exception as e:
+            print(f"Request from {addr} failed: {e!r}")
+            response = None
 
-    if response is not None:
-        writer.write(response.encode())
-    else:
-        # Handle the case where response is None (e.g., unrecognized request)
-        error_response = "Error: Unrecognized request"
-        writer.write(error_response.encode())
+        if response is not None:
+            writer.write(response.encode())
+        else:
+            # Handle the case where response is None (e.g., unrecognized request)
+            error_response = "Error: Unrecognized request"
+            writer.write(error_response.encode())
 
-    await writer.drain()
-    writer.close()
+        await writer.drain()
+    except (ConnectionError, asyncio.IncompleteReadError):
+        pass  # the client went away (reset by peer); nothing to answer
+    finally:
+        writer.close()
 
 async def main():
     host = '0.0.0.0'
