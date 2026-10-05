@@ -9,6 +9,8 @@ import sys
 
 import holepunch
 
+VERSION = '1.1.0'
+
 nfsuserver_path = os.path.dirname(os.path.abspath(__file__))
 
 CENTRAL_REGISTRY_HOST = 'nfs.onl'
@@ -193,7 +195,7 @@ async def main():
                 print(f"Hole punching not started: {e}")
 
         server = await asyncio.start_server(handle_client, host, port)
-        print(f"TCP server is listening on {host}:{port}")  
+        print(f"nfsuinfoserver {VERSION}: TCP server is listening on {host}:{port}")  
             
         async with server:
             await server.serve_forever()
