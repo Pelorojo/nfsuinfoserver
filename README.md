@@ -2,7 +2,7 @@
 TCP infoserver for [nfsuserver](https://github.com/HarpyWar/nfsuserver) to share online rankings and records
 
 ## Installation:
-Copy infoserver.py and infoserver.sh into the nfsuserver folder (where `stat.dat` is located).\
+Copy infoserver.py, holepunch.py and infoserver.sh into the nfsuserver folder (where `stat.dat` is located).\
 Then cd to that folder and run:\
 `./infoserver.sh install`
 
@@ -13,7 +13,7 @@ Then cd to that folder and run:\
 `./infoserver.sh restart`
 
 ## Usage:
-The server will listen on TCP port 10880 and respond to following requests:
+The server will listen on TCP port 10880 (open it in your firewall, e.g. `sudo ufw allow 10880/tcp`) and respond to following requests:
 
 <= in\
 `ping`\
@@ -73,4 +73,6 @@ TCP Port: 10881
 `<ip:port1> <ip:port2> <ip:port3>` ...
 
 ## Note
-In case my server is no more or you want to use another server as public list provider, the installation is equivalent to infoserver.
+In case my server is no more or you want to use another server as public list provider, the scripts are in the `infocentral` folder.\
+Copy infocentral.py and infocentral.sh to your server, cd to that folder and run `./infocentral.sh install` (`remove` and `restart` work like for the infoserver).\
+Open TCP port 10881 in your firewall, e.g. `sudo ufw allow 10881/tcp`, and change `CENTRAL_REGISTRY_HOST` in infoserver.py to your server.
