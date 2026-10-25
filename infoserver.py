@@ -7,9 +7,10 @@ import signal
 import asyncio
 import sys
 
+import board
 import holepunch
 
-VERSION = '1.1.2'
+VERSION = '1.2.0'
 
 # Under systemd stdout is a pipe and Python would buffer it: flush every line, so the
 # journal shows each message when it happens.
@@ -207,6 +208,13 @@ async def main():
                 await holepunch.start(host)
             except Exception as e:
                 print(f"Hole punching not started: {e}")
+
+        # Board for kickStart (TCP 10802), e.g. fair collisions in online races; off with --no-board.
+        if '--no-board' not in sys.argv:
+            try:
+                await board.start(host)
+            except Exception as e:
+                print(f"Board not started: {e}")
 
         server = await asyncio.start_server(handle_client, host, port)
         print(f"nfsuinfoserver {VERSION}: TCP server is listening on {host}:{port}")  

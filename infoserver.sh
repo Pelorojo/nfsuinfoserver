@@ -6,7 +6,16 @@ INSTALL_SCRIPT_PATH=$(dirname "$(realpath "$0")")  # Path to the directory conta
 SCRIPT_PATH="${INSTALL_SCRIPT_PATH}/infoserver.py"
 
 install_service() {
-    echo "Installing ${SERVICE_NAME} service..."
+    # Options after "install" go to infoserver.py, e.g. --no-holepunch / --no-board
+    local args=""
+    for arg in "$@"; do
+        if [[ ! "$arg" =~ ^--[a-z-]+$ ]]; then
+            echo "Unknown option: $arg"
+            exit 1
+        fi
+        args+=" $arg"
+    done
+    echo "Installing ${SERVICE_NAME} service${args:+ with$args}..."
     
     # Create the service file
     cat << EOF | sudo tee "${SERVICE_FILE}" > /dev/null
@@ -17,7 +26,7 @@ After=network.target
 [Service]
 Type=simple
 User=$(whoami)
-ExecStart=/usr/bin/python3 ${SCRIPT_PATH}
+ExecStart=/usr/bin/python3 ${SCRIPT_PATH}${args}
 Restart=always
 
 [Install]
@@ -26,7 +35,7 @@ EOF
 
     sudo systemctl daemon-reload
     sudo systemctl enable "${SERVICE_NAME}"
-    sudo systemctl start "${SERVICE_NAME}"
+    sudo systemctl restart "${SERVICE_NAME}"   # restart: installing again with other options takes effect
     echo "Service installed and started successfully."
 }
 
@@ -47,7 +56,8 @@ restart_service() {
 
 case "$1" in
     install)
-        install_service
+        shift
+        install_service "$@"
         ;;
     remove)
         remove_service
@@ -55,8 +65,12 @@ case "$1" in
     restart)
         restart_service
         ;;
+    ban|unban)
+        # board.py ban <ip> [reason] / unban <ip>; the running server picks it up
+        /usr/bin/python3 "${INSTALL_SCRIPT_PATH}/board.py" "$@"
+        ;;
     *)
-        echo "Usage: $0 {install|remove|restart}"
+        echo "Usage: $0 {install [--no-holepunch] [--no-board]|remove|restart|ban <ip> [reason]|unban <ip>}"
         exit 1
 esac
 

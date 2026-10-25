@@ -1,2 +1,5 @@
 __pycache__/
 infoservers.csv
+board.salt
+board.blacklist
+board.blacklist.tmp
